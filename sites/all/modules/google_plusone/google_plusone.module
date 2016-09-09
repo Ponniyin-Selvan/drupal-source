@@ -1,0 +1,94 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function google_plusone_menu() {
+
+  $items['admin/settings/google-plusone'] = array(
+    'title'            => 'Google +1',
+    'description'      => 'Configure Google Plus One button settings',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('google_plusone_admin_settings'),
+    'access arguments' => array('administer google plusone'),
+    'file'             => 'google_plusone.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function google_plusone_theme() {
+	return array(
+    'google_plusone_button' => array(
+      'arguments' => array('node' => NULL),
+    )
+  );
+}
+
+/**
+ * Implements hook_perm().
+ */
+function google_plusone_perm() {
+  $perms[] = 'administer google plusone';
+  $perms[] = 'view google plusone';
+  return $perms;
+}
+
+/**
+ * Implements hook_nodeapi().
+ */
+function google_plusone_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+
+  if ($op === 'view'
+    && in_array($node->type, variable_get('google_plusone_node_types', array('story')), TRUE)
+    && user_access('view google plusone')
+    && $node->build_mode === NODE_BUILD_NORMAL) {
+
+    $view_mode = $a3 ? 'teaser' : 'full';
+    $show_on_teasers = variable_get('google_plusone_showonteasers', 0);
+
+    if ($view_mode === 'full' || ($view_mode === 'teaser' && $show_on_teasers)) {
+
+      $node->content['google_plusone'] = array(
+        '#weight'  => variable_get('google_plusone_weight', -5),
+        '#value'   => theme('google_plusone_button', $node),
+      );
+    }
+  }
+}
+
+
+/**
+ * Returns HTML for the Google +1 button.
+ *
+ * @param $node
+ *   The node object.
+ *
+ * @ingroup themeable
+ */
+function theme_google_plusone_button($node) {
+  global $base_url;
+  static $js_added = FALSE;
+
+  // Prevent to add more than once
+  if (!$js_added) {
+
+    // Lazy loading
+    $script = 'var gPlusOne = "http://apis.google.com/js/plusone.js";';
+    $script .= 'document.write(unescape("%3Cscript src=\'" + gPlusOne + "\' type=\'text/javascript\'%3E%3C/script%3E"));';
+    drupal_add_js($script, 'inline', 'footer');
+    $js_added = TRUE;
+  }
+
+  // TODO: Add option to use the non-aliased node URL if it's useful
+  $node_url = $base_url . '/' . $node->path;
+  $size = variable_get('google_plusone_size', 'standard');
+  $count = variable_get('google_plusone_count', 1) ? 'true' : 'false';
+
+  // It MUST contain the g-plusone class
+  $button = '<div class="g-plusone" href="' . $node_url . '" size="' . $size . '" count="' . $count . '"></div>';
+
+  return $button;
+}

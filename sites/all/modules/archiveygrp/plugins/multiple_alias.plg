@@ -1,0 +1,23 @@
+<?php
+
+class MultipleAlias extends BasePlugin {
+	var $logger;
+	var $settings;
+
+    function MultipleAlias(){
+        $this->logger =& LoggerManager::getLogger('MultipleAlias');
+	}
+
+    public function onLoad(&$settings) {
+		$this->settings = $settings;
+	}
+	
+	public function handleMessage(&$messageDetails) {
+		$aliasName = "alias.".$messageDetails['member'];
+		$alias = $this->settings[$aliasName];
+		if ($alias != null) {
+			$messageDetails['member'] = $alias;
+		}
+	}
+}
+

@@ -1,0 +1,1 @@
+a, abbr, acronym, address, b, bdo, big, blockquote, br, caption, center, cite, code, dd, del, dfn, dir, dl, dt, em,h1, h2, h3, h4, h5, h6, hr, i, ins, legend, li, ol, p, pre, q, rb, rbc, rp, rt, rtc, s, small, span, strike, strong, sub, sup, tt, u, ul, var

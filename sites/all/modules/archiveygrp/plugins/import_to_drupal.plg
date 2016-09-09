@@ -1,0 +1,108 @@
+<?php
+
+class ImportToDrupal extends BasePlugin {
+	var $logger;
+	var $settings;
+	var $forum_id = 0;
+	var $defaulUserPassword = 'changeme';
+	var $userTimeZone = 0;
+	var $defaultLanguage = "en";
+	var $userRole = 6;
+	var $contentType = 2; //HTML
+	var $commentStatus = 0;
+	var $topicStatus = 1;
+	
+    function ImportToDrupal(){
+        $this->logger =& LoggerManager::getLogger('ImportToDrupal');
+	}
+
+    public function onLoad(&$settings) {
+		$this->settings = $settings;
+		$this->forum_id = $this->settings['forum.id'];
+		$this->defaulUserPassword = $this->settings['default.user.password'];
+		$this->userTimeZone = $this->settings['user.timezone'];
+		$this->defaultLanguage = $this->settings['user.default.language'];
+		$this->userRole = $this->settings['user.role.id'];
+		$this->contentType = $this->settings['content.type'];
+		$this->commentStatus = $this->settings['comment.status'];
+		$this->topicStatus = $this->settings['topic.status'];
+	}
+	
+	private function createForumTopic($tid, $uid, &$messageDetails) {
+		$topic = new StdClass();
+		$topic->nid ='';
+		$topic->vid   ='';
+		$topic->tid = $tid;		
+		$topic->type = forum;
+		$topic->title = $messageDetails['topic'];
+		$topic->uid = $uid;
+		$topic->status = $this->topicStatus;
+		$topic->body = $messageDetails['content'][0];
+		$topic->comment = 2;
+		$topic->taxonomy[] = $tid;
+		$topic->created = $messageDetails['posted_on'];
+		$topic->changed = $messageDetails['posted_on'];
+		$topic->timestamp = $messageDetails['posted_on']; 
+		//$topic->language = 'en';
+		node_save($topic);
+		$nid = $topic->nid;
+		unset($topic);
+		return $nid;
+	}
+	
+	private function createTopicReply($nid, $uid, &$messageDetails) {
+		$comment = array();
+		$comment['nid'] = $nid;
+		$comment['pid'] = 0;
+		$comment['uid'] = $uid;
+		$comment['subject'] = $messageDetails['topic'];		
+		$comment['comment'] = $messageDetails['content'][0];
+		$comment['format'] = $this->contentType;
+		$comment['status'] = $this->commentStatus;
+		$comment['timestamp'] = $messageDetails['posted_on'];
+		$cid = comment_save($comment);
+		unset($comment);
+		return $cid;
+	}
+	
+	private function log($nid, $cid, &$messageDetails) {
+		db_query("INSERT INTO {ponniyinselvan_log} (nid, cid, message_no, ip_address, source) ".
+			     "VALUES (%d, %d, %d, '%s', compress(%b))", $nid, $cid, 
+				 $messageDetails['message_no'], 
+				 $messageDetails['member_ip'], $messageDetails['formatted_email_source']);
+	}
+	
+	
+	public function handleMessage(&$messageDetails) {
+		global $user;
+		$account = user_load(array('name' => $messageDetails['member']));
+		if ($account == FALSE) {
+			$this->logger->info("User ".$messageDetails['member']." doesn't exists, creating...");
+			$account = user_save(NULL, array('name' => $messageDetails['member'], 
+				'pass' => $this->defaulUserPassword, 
+				'mail' => $messageDetails['member'] . '@ponniyinselvan.in', 
+				'status' => 1, 
+				'timezone' => $this->userTimeZone, 
+				'language' => $this->defaultLanguage,
+				'init' => $messageDetails['member'] . '@ponniyinselvan.in',
+				'roles' => array($this->userRole => 'Role')
+				));
+		}
+		if ($account) {
+			$user = $account;
+		}
+
+		$tid = $this->forum_id;
+		$cid = 0;
+		$nid = db_result(db_query("SELECT tn.nid FROM {term_node} tn INNER JOIN {node} n ON tn.nid = n.nid WHERE tn.tid = %d AND n.type = '%s' AND n.title = '%s'", $tid, "forum", $messageDetails['topic']));
+		if ($nid !== FALSE) {
+			$this->logger->info("Creating comment ".$messageDetails['topic']);
+			$cid = $this->createTopicReply($nid, $account->uid, $messageDetails);
+		} else {
+			$this->logger->info("Creating topic ".$messageDetails['topic']);
+			$nid = $this->createForumTopic($tid, $account->uid, $messageDetails);
+		}
+		$this->log($nid, $cid, $messageDetails);
+	}
+}
+

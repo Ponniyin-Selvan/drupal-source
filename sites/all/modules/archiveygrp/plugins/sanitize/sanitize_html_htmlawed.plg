@@ -1,0 +1,53 @@
+<?php
+require('htmLawed.php');
+
+class SanitizeHtmlHtmlawed extends BasePlugin {
+	var $logger;
+	var $config;
+   
+    function SanitizeHtmlHtmlawed(){
+        $this->logger =& LoggerManager::getLogger('SanitizeHtmlHtmlawed');
+		$this->config = array(
+			'anti_mail_spam'=> 'NO@SPAM',
+			'balance'=>1,
+			'cdata'=>2,
+			'clean_ms_char'=>0,
+			'comment'=>1,
+			'css_expression'=> 0,
+			'deny_attribute'=> '-style',
+			'elements'=>'* -img -font -div -html -head -body',
+			'hexdec_entity'=>1,
+			'keep_bad'=>6,
+			'lc_std_val'=>1,
+			'make_tag_strict'=>2,
+			'named_entity'=>0,
+			'no_deprecated_attr'=>2,
+			'parent'=>'div',
+			'safe'=>1,
+			'schemes'=>'href: aim, feed, file, ftp, gopher, http, https, irc, mailto, news, nntp, sftp, ssh, telnet; *:file, http, https',
+			'style_pass' => 0,
+			'tidy'=> -1,
+			'unique_ids'=>1,
+			'valid_xhtml'=>1
+		);
+    }
+	
+	public function handleMessage(&$messageDetails) {
+
+		if (isset($messageDetails['content-type'])) {
+		    if ($messageDetails['content-type'] == "text/html") {
+			if (isset($messageDetails['content'])) {
+				$htmlMessages = $messageDetails['content'];
+				foreach($htmlMessages as $id => $htmlMessage) {
+				   $htmlMessages[$id] = htmLawed($htmlMessage, $this->settings); 
+				}
+				$messageDetails['content'] = $htmlMessages;
+			} else {
+				$this->logger->error("Message doesn't have html content");
+			}
+		} else {
+			$this->logger->error("Couldn't find content type");
+		}
+	}
+}
+?>

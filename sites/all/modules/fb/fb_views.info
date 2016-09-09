@@ -1,0 +1,11 @@
+name = DFF Views
+description = Provides features specific to Views module for Facebook Apps.
+package= Drupal for Facebook
+dependencies = fb views
+
+; Information added by drupal.org packaging script on 2009-06-12
+version = "6.x-2.x-dev"
+core = "6.x"
+project = "fb"
+datestamp = "1244765345"
+

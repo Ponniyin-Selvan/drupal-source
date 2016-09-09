@@ -1,0 +1,28 @@
+<?php
+class SelectTextContentType extends BasePlugin {
+	var $logger;
+
+	function SelectTextContentType() {
+		$this->logger =& LoggerManager::getLogger('SelectTextContentType');
+	}
+	
+	public function handleMessage(&$messageDetails) {
+	    $messageDetails['content-type'] = 'text/plain';
+		if (isset($messageDetails['mail_body'])) {
+		    $mailBody = $messageDetails['mail_body'];
+			if (isset($mailBody['plain'])) {
+				$messageDetails['content'] = $mailBody['plain'];
+			} else {
+				$this->logger->error("Message doesn't have plain content, fallback to html text");
+				if (isset($mailBody['html'])) {
+					$messageDetails['content'] = $mailBody['html'];
+				} else {
+					$this->logger->error("Message doesn't have text content as well");
+				}
+			}
+		} else {
+			$this->logger->error("Couldn't find email object");
+		}
+	}
+}
+?>

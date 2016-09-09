@@ -1,0 +1,80 @@
+<?php
+
+class AcronymIt extends BasePlugin {
+	var $logger;
+	var $acronyms;
+
+    function AcronymIt(){
+        $this->logger =& LoggerManager::getLogger('AcronymIt');
+		// TODO - move this to properties file
+		$this->acronyms = array(
+			'AIIMS'	=>	'All India Institute of Medical Sciences',
+			'AIR '	=>	'All India Radio',
+			'AK '	=>	'Adithya Karikalan',
+			'AKK '	=>	'Adithya Karikalan',
+			'ARCH '	=>	'Archaeology',
+			'ASAP '	=>	'As soon  as possible',
+			'ASI'	=>	'Archaeological Survey of India',
+			'BHEL'	=>	'Bharat Heavy Electricals Limited',
+			'BIT'	=>	'Birla Institute of Technology',
+			'BSE'	=>	'Bombay Stock Exchange',
+			'BSNL'	=>	'Bharat Sanchar Nigam Ltd',
+			'CBI'	=>	'Central Bureau of Investigation',
+			'CBSE'	=>	'Central Board of Secondary Education',
+			'CBT'	=>	'Computer Based Training',
+			'CRPF'	=>	'Central Reserve Police Force',
+			'CSI'	=>	'Computer Society of India',
+			'DIY'	=>	'Do It Youself',
+			'DRDO'	=>	'Defence Research & Development Organisation',
+			'FAQ'	=>	'Frequently Asked Questions',
+			'FYI'	=>	'For Your Information',
+			'GKC'	=>	'Gangai Konda Cholapuram',
+			'IIITB'	=>	'Indian Institute of Information Technology, Bangalore',
+			'IIM'	=>	'Indian Institute of Management',
+			'IIT'	=>	'Indian Instittue of Technology',
+			'IMHO'	=>	'In my humble opinion',
+			'IMO'	=>	'In my opinion',
+			'ISCKON'	=>	'International Society of Krishna Consciousness',
+			'ISRO'	=>	'Indian Space Research Organisation',
+			'KAN'	=>	'KA Neelakanta shastri',
+			'KANS'	=>	'KA Neelakanta shastri',
+			'PK'	=>	'Parthiban Kanavu',
+			'PS'	=>	'Ponniyin Selvan',
+			'PSVP'	=>	'Ponniyin Selvan Varalaatru Pervai',
+			'RBI'	=>	'Reserve Bank Of India',
+			'RC'	=>	'Rajendra Cholan',
+			'RCII'	=>	'Rajendra Cholan II',
+			'RJ'	=>	'Rajendra Cholan',
+			'RJC'	=>	'Rajendra Cholan',
+			'RR'	=>	'Raja Raja Cholan',
+			'RRC'	=>	'Raja Raja Cholan',
+			'SS'	=>	'Sivakamiyin Sabatham',
+			'TNAU'	=>	'Tamilnadu Agricultural University',
+			'TNJ'	=>	'Thanjavur',
+			'TNPSC'	=>	'Tamil Nadu Public Service Commission',
+			'TSC'	=>	'Tamil Standard Code',
+			'TSCII'	=>	'Tamil Standard Code, for Information Interchange',
+			'VD'	=>	'Vallavaraiyan Vandhiyathevan',
+			'VT'	=>	'Vallavaraiyan Vandhiyathevan',
+			'VV'	=>	'Vallavaraiyan Vandhiyathevan',
+			'VVD'	=>	'Vallavaraiyan Vandhiyathevan'
+		);
+		//uksort($this->acronyms, 'sortr_longer'); // comment out if already sorted
+	}
+	
+	public function handleMessage(&$messageDetails) {
+		if (isset($messageDetails['content'])) {
+			$messages = $messageDetails['content'];
+			foreach($messages as $id => $message) {
+				foreach ($this->acronyms as $acronym => $definition) {
+					$message = preg_replace("|(?!<[^<>]*?)(?<![?./&])\b$acronym\b(?!:)(?![^<>]*?>)|imsU","<acronym title=\"$definition\">$acronym</acronym>", $message);
+				}
+				$messages[$id] = $message;
+			}
+			$messageDetails['content'] = $messages;
+		} else {
+			$this->logger->error("Message doesn't have html content");
+		}
+	}
+}
+

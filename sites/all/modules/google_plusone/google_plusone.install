@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * Implements hook_uninstall().
+ */
+function google_plusone_uninstall() {
+
+	variable_del('google_plusone_node_types');
+  variable_del('google_plusone_showonteasers');
+  variable_del('google_plusone_count');
+  variable_del('google_plusone_size');
+  variable_del('google_plusone_weight');
+
+}

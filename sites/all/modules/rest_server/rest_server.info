@@ -1,0 +1,14 @@
+; $Id: rest_server.info,v 1.1.2.1.2.2.2.1 2009/05/19 20:15:07 hugowetterberg Exp $
+name = REST Server
+description = Provides an REST server.
+package = Services - servers
+dependencies[] = services
+dependencies[] = inputstream
+dependencies[] = autoload
+core = 6.x
+; Information added by drupal.org packaging script on 2009-09-07
+version = "6.x-2.0-beta1"
+core = "6.x"
+project = "rest_server"
+datestamp = "1252306283"
+

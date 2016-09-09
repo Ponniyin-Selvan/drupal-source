@@ -1,0 +1,15 @@
+; $Id: acidfree_image.info,v 1.1.2.1 2008/12/15 14:23:05 vhmauery Exp $
+name = Acidfree Image
+description = Add images to your Acidfree albums via the Image module
+dependencies[] = acidfree
+dependencies[] = image
+core = 6.x
+package = Acidfree
+
+
+; Information added by drupal.org packaging script on 2008-12-16
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "acidfree"
+datestamp = "1229385622"
+

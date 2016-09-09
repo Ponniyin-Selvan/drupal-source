@@ -1,0 +1,83 @@
+<?php
+
+class Embedify extends BasePlugin {
+	var $logger;
+
+    function Embedify(){
+        $this->logger =& LoggerManager::getLogger('Embedify');
+	}
+	
+	function embedLinks($matches) {
+	
+	   $embed_info = array(
+						array('type' => 'host',
+							  'host' => 'www.youtube.com',
+							  'params' => array('v'),
+							  'embed_string' => '<swf file="http://www.youtube.com/v/{v}" height="344" width="425" action="swftools_swf_display_direct">';
+							  ),
+						array('type' => 'host',
+							  'host' => 'www.youtube.com',
+							  'params' => array('v'),
+							  'embed_string' => '<swf file="http://www.youtube.com/watch?v={v}" height="344" width="425" action="swftools_swf_display_direct">';
+							  ),
+						array('type' => 'host',
+							  'host' => 'video.google.com',
+							  'params' => array('docid'),
+							  'embed_string' => '<swf file="http://video.google.com/googleplayer.swf?docid={docid}&hl=en&fs=true" height="344" width="425" action="swftools_swf_display_direct">';
+							  ),
+						array('type' => 'extension',
+							  'extension' => 'mp3',
+							  'embed_string' => '<swf file="{url}" action="swftools_mp3_display">';
+							  )
+						);
+	
+	    $url = trim($matches[0]);
+		$embed_url = $url;
+		foreach($embed_info as $embed) {
+			$url_info = parse_url($url);
+			switch($embed['type']) {
+				case 'host':
+					 if ($url_info['host'] == $embed['host']) {
+					   if (array_key_exists("query", $url_info)) {
+						   parse_str($url_info['query'], $params);
+						   $embed_url = $embed['embed_string'];
+						   foreach($embed['params'] as $param) {
+							  if (isset($params[$param])) {
+								  $embed_url = str_replace("{".$param."}", $params[$param], $embed_url);
+							  }
+						   }
+						}
+					 }
+					 break;
+				case 'extension':
+					 if (isset($url_info['path'])) {
+						 $path_info = pathinfo($url_info['path']);
+						 if (array_key_exists('extension', $path_info)) {
+							 $extension = $path_info['extension'];
+							 if ($extension == $embed['extension']) {
+								 $embed_url = $embed['embed_string'];
+							 }
+						 }
+					 }
+					 break;
+			}
+		}
+		$embed_url = str_replace("{url}", $url, $embed_url);
+		return $embed_url;
+	}
+	
+	public function handleMessage(&$messageDetails) {
+		if (isset($messageDetails['content'])) {
+			$messages = $messageDetails['content'];
+			foreach($messages as $id => $message) {
+				$messages[$id] = preg_replace_callback(
+							  "!\bhttps?://([\w\-]+\.)+[a-zA-Z0-9]{2,3}(/(\S+)?)?\b!",
+							  array($this,'embedLinks'), $message);
+			}
+			$messageDetails['content'] = $messages;
+		} else {
+			$this->logger->error("Message doesn't have html content");
+		}
+	}
+}
+

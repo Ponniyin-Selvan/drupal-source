@@ -1,0 +1,114 @@
+<?php
+class GetEmailContents extends BasePlugin {
+	var $logger;
+	var $settings;
+   
+	function GetEmailContents(){
+        $this->logger =& LoggerManager::getLogger('GetEmailContents');
+    }
+
+    public function onLoad(&$settings) {
+		$this->settings = $settings;
+	}
+
+	function getMailParts($part, $mailParts = null) {
+
+		if ($mailParts == null) {
+			$mailParts = array();
+		}
+		if ($part instanceof ezcMail) {
+			$mailParts = $this->getMailParts($part->body, $mailParts);
+
+		} else if ($part instanceof ezcMailText) {
+			if (!array_key_exists($part->subType, $mailParts)) {
+				$mailParts[$part->subType] = array();
+			}
+			$mailParts[$part->subType][] = $part->text;
+
+		} else if ($part instanceof ezcMailRfc822Digest) {
+			$mailParts = $this->getMailParts($part->mail, $mailParts);
+
+		} else if ($part instanceof ezcMailMultiPartAlternative
+						|| $part instanceof ezcMailMultipartMixed) {
+			foreach ($part->getParts() as $key => $alternativePart)  {
+				$mailParts = $this->getMailParts($alternativePart, $mailParts);
+			}
+		} else if ($part instanceof ezcMailMultiPartRelated ) {
+			$mailParts = $this->getMailParts($part->getMainPart(), $mailParts);
+
+		} else if ($part instanceof ezcMailFile) {
+			// ignore
+		} else {
+			$this->logger->error("No clue about the ".get_class( $part )."\n");
+		}
+		return $mailParts;
+	}
+
+	function setMessageDetails($emailMessage, &$messageDetails) {
+		$messageDetails['posted_on'] = strtotime($emailMessage->getHeader('date'));
+		
+		$member_from = $emailMessage->getHeader('from');
+        $delimiter_pos = strrpos($member_from, "<");
+
+        if ($delimiter_pos > 0) {
+           $member_from = substr($member_from, 0, $delimiter_pos);
+        }
+        $member_from = str_replace("\"", "", $member_from);
+
+        $messageDetails['member_name'] = $member_from;
+		$messageDetails['member'] = $emailMessage->getHeader('x-yahoo-profile');
+		if (!$messageDetails['member']) {
+		   $messageDetails['member'] = $member_from;
+		}
+	
+        $ip = "";
+        if (stristr($emailMessage->getHeader('user-agent'), 'eGroups-EW')) {
+            $ip = $emailMessage->getHeader('x-yahoo-post-ip');
+            if ($ip == null || $ip == "") {
+               $ip = $emailMessage->getHeader('x-originating-ip');
+            }
+            if ($ip == null || $ip == "") {
+               $ip = $emailMessage->getHeader('x-egroups-remote-ip');
+            }
+
+        } else {
+		    $received_header = $emailMessage->getHeader('received');
+			if ($received_header == "") {
+				$received_header = $emailMessage->getHeader('x-received');
+			}
+     	    $received = split(";", $received_header);
+        		// extract the ip address
+		    preg_match("/(\d{1,3}\.){3}\d{1,3}/", $received[0], $matches, PREG_OFFSET_CAPTURE);
+		    if (count($matches) > 0) {
+			   $ip =  $matches[0][0];
+            }
+        }
+        if ($ip != "") {
+           $messageDetails['member_ip'] = $ip;
+		}
+
+        $subject_remove_find = array("re:", "fw:", "fwd:", "[".$this->settings['groupName']."]");
+        $subject_remove_replace = array("", "", "", "");
+        $subject = trim(@iconv_mime_decode($emailMessage->getHeader('subject'), 0, "UTF-8"));
+        $thread_subject = trim(str_ireplace($subject_remove_find, $subject_remove_replace, $subject));
+        $thread_subject = ($thread_subject == "" ? "(no subject)" : $thread_subject);
+
+        // actual subject from email
+        $messageDetails['topic'] = $thread_subject;
+	}
+	
+	public function handleMessage(&$messageDetails) {
+		if (isset($messageDetails['email'])) {
+			$mailParts = $this->getMailParts($messageDetails['email']->body);
+			foreach($mailParts as $type => $parts) {
+				//$mailParts[$type][0] = iconv("UTF-8", "UTF-8//IGNORE", $parts[0]);
+				$this->logger->debug("$type encoding - ".mb_detect_encoding($parts[0]), "auto");
+			}
+			$messageDetails['mail_body'] = $mailParts;
+			$this->setMessageDetails($messageDetails['email'], $messageDetails);
+		} else {
+			$this->logger->error("Couldn't find email object");
+		}
+	}
+}
+?>

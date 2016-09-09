@@ -1,0 +1,16 @@
+; $Id: acidfree_video.info,v 1.1.2.1 2008/12/15 14:23:05 vhmauery Exp $
+name = Acidfree Video
+description = Add videos to your Acidfree albums via the Video module
+dependencies[] = acidfree
+dependencies[] = image
+dependencies[] = video
+dependencies[] = video_image
+core = 6.x
+package = Acidfree
+
+; Information added by drupal.org packaging script on 2008-12-16
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "acidfree"
+datestamp = "1229385622"
+

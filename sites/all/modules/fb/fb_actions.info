@@ -1,0 +1,11 @@
+name= DFF Actions
+description = Provides actions for tasks such as updating a Facebook Profile or writing to a Mini-Feed.
+package = Drupal for Facebook
+dependencies = actions token fb
+
+; Information added by drupal.org packaging script on 2009-06-12
+version = "6.x-2.x-dev"
+core = "6.x"
+project = "fb"
+datestamp = "1244765345"
+

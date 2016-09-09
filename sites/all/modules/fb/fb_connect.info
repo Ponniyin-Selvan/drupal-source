@@ -1,0 +1,13 @@
+name = DFF Connect
+description = Login to Drupal with Facebook username and password, and other fbConnect features.  You will need a fbConnect-aware theme.
+package = Drupal for Facebook
+core = 6.x
+dependencies[] = fb
+dependencies[] = fb_app
+
+; Information added by drupal.org packaging script on 2009-06-12
+version = "6.x-2.x-dev"
+core = "6.x"
+project = "fb"
+datestamp = "1244765345"
+

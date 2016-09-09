@@ -1,0 +1,19 @@
+; $Id: acidfree.info,v 1.4.4.2 2008/12/15 15:12:45 vhmauery Exp $
+name = Acidfree
+description = A simple unified media management module for Image and Video modules
+dependencies[] = taxonomy
+dependencies[] = image
+;
+;dependencies[] = video
+; we would like an optional dependency on image OR video since
+; albums are really nothing without something to put in them
+;
+core = 6.x
+package = Acidfree
+
+; Information added by drupal.org packaging script on 2008-12-16
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "acidfree"
+datestamp = "1229385622"
+

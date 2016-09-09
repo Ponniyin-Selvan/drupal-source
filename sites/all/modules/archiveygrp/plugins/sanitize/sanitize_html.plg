@@ -1,0 +1,69 @@
+<?php
+require('htmLawed.php');
+require_once 'htmlpurifier-3.3.0/library/HTMLPurifier.auto.php';
+
+class SanitizeHtml extends BasePlugin {
+	var $logger;
+	var $settings;
+	var $config;
+	var $purifier;
+   
+    function SanitizeHtml(){
+        $this->logger =& LoggerManager::getLogger('SanitizeHtml');
+	$this->config = HTMLPurifier_Config::createDefault();
+	$this->config->set('Core', 'Encoding', 'UTF-8');
+	$this->config->set('HTML', 'AllowedElements', 'a, abbr, acronym, address, b, bdo, big, blockquote, br, caption, center, cite, code, dd, del, dfn, dir, div, dl, dt, em,h1, h2, h3, h4, h5, h6, hr, i, ins, li, ol, p, pre, q, s, small, span, strike, strong, sub, sup, tt, u, ul, var');
+	$this->config->set('AutoFormat', 'AutoParagraph', true);
+	$this->config->set('AutoFormat', 'Linkify', true);
+	$this->config->set('HTML', 'TidyLevel', 'heavy'); 
+	$this->config->set('HTML', 'ForbiddenAttributes', '*@style, *@class');
+	$this->purifier = new HTMLPurifier($this->config);
+    }
+
+    public function onLoad(&$settings) {
+		$this->settings = $settings;
+	}
+	
+	public function handleMessage(&$messageDetails) {
+		$cfg = array(
+			'anti_mail_spam'=> 'NO@SPAM',
+			'balance'=>1,
+			'cdata'=>2,
+			'clean_ms_char'=>0,
+			'comment'=>1,
+			'css_expression'=> 0,
+			'deny_attribute'=> '-style',
+			'elements'=>'* -img -font -div -html -head -body',
+			'hexdec_entity'=>1,
+			'keep_bad'=>6,
+			'lc_std_val'=>1,
+			'make_tag_strict'=>2,
+			'named_entity'=>0,
+			'no_deprecated_attr'=>2,
+			'parent'=>'div',
+			'safe'=>1,
+			'schemes'=>'href: aim, feed, file, ftp, gopher, http, https, irc, mailto, news, nntp, sftp, ssh, telnet; *:file, http, https',
+			'style_pass' => 0,
+			'tidy'=> -1,
+			'unique_ids'=>1,
+			'valid_xhtml'=>1
+		);
+
+		if (isset($messageDetails['content-type'])) {
+		    if ($messageDetails['content-type'] == "text/html") {
+			if (isset($messageDetails['content'])) {
+				$htmlMessages = $messageDetails['content'];
+				foreach($htmlMessages as $id => $htmlMessage) {
+				   //$htmlMessages[$id] = htmLawed($htmlMessage, $this->settings); 
+				   $htmlMessages[$id] = $this->purifier->purify($htmlMessage);
+				}
+				$messageDetails['content'] = $htmlMessages;
+			} else {
+				$this->logger->error("Message doesn't have html content");
+			}
+		} else {
+			$this->logger->error("Couldn't find content type");
+		}
+	}
+}
+?>

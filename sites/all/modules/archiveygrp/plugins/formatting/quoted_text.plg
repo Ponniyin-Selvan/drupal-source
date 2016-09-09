@@ -1,0 +1,42 @@
+<?php
+
+class QuotedText extends BasePlugin {
+	var $logger;
+
+    function QuotedText(){
+        $this->logger =& LoggerManager::getLogger('QuotedText');
+	}
+	
+	function formatQuotedText($message) {
+	
+		$lines = preg_split("/\\n/", $message, -1, PREG_SPLIT_DELIM_CAPTURE);
+		$formatted_text = "";
+		$is_quote = false;
+		for ($i = 0 ; $i < count($lines) ; $i++) {
+			 if (substr($lines[$i], 0, 1) == ">") {
+				if (!$is_quote) {
+				   $is_quote = true;
+				   $formatted_text .= "</p><blockquote>";
+				}
+			 } else if ($is_quote  && substr($lines[$i - 1], 0, 1) !== ">") {
+				   $is_quote = false;
+				   $formatted_text .= "</blockquote><p>";
+			 }
+			 $formatted_text .= str_replace(">", " ", $lines[$i])."\n";
+		 }
+		 return "<p>".$formatted_text."</p>";
+	}
+	
+	public function handleMessage(&$messageDetails) {
+		if (isset($messageDetails['content'])) {
+			$messages = $messageDetails['content'];
+			foreach($messages as $id => $message) {
+				$messages[$id] = $this->formatQuotedText($message);
+			}
+			$messageDetails['content'] = $messages;
+		} else {
+			$this->logger->error("Message doesn't have html content");
+		}
+	}
+}
+

@@ -1,0 +1,26 @@
+name = StunningPress
+description = Convert from <a href="http://newwpthemes.com">StunningPress</a> Wordpress theme
+screenshot = images/screenshot.jpg
+core = 6.x
+engine = phptemplate
+version = 1.0
+
+regions[right] = Right sidebar
+regions[slideshow] = Slideshow
+regions[contenttop] = Content top
+regions[content] = Content
+regions[contentbt] = Content bottom
+regions[node_content_block] = Block in Node
+regions[footer] = Footer
+
+features[] = logo
+features[] = primary_links
+features[] = name
+features[] = favicon
+features[] = search
+features[] = secondary_links
+features[] = comment_user_picture
+
+stylesheets[all][] = css/screen.css
+stylesheets[print][] = css/print.css
+stylesheets[all][] = css/style.css

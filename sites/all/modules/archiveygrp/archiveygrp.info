@@ -1,0 +1,5 @@
+;$Id$
+name = "Archive Yahoo Group"
+description = "Archive Yahoo Group Messages and post it as forum topic/replies"
+core = 6.x
+php = 5.1

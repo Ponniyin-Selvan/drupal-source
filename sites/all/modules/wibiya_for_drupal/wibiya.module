@@ -1,0 +1,97 @@
+<?php
+// $Id: wibiya.module
+
+/**
+ * @file
+ * Include Wibiya Toolbar (http://www.wibiya.com/) in Drupal
+ * 
+ * @copyright GPL (http://www.gnu.org/copyleft/gpl.html)
+ * @author Wibiya (http://www.wibiya.com)
+ */
+
+
+/**
+ * Display help message
+ * with links to relevant wibiya.com pages
+ * @param path the path of the site we are at
+ * @return help message
+ */
+ function wibiya_help($path) {
+   switch ($path) {
+     case 'admin/settings/wibiya':
+       return '<p>'.t('If you don\'t have an account and/or Toolbar Path yet, <a href="http://www.wibiya.com/UserBetaLogin.php">create an account at Wibiya</a> and get the Toolbar Path from the embed code from the <a href="http://www.wibiya.com/edit_install.php">dashboard</a>.').'</p>';
+   }
+}
+ 
+ /**
+ * Menu items builder
+ * Implementating hook_menu()
+ * @return array of menu items
+ */
+function wibiya_menu() {
+  $items['admin/settings/wibiya'] = array(
+    'title' => t('Wibiya Settings'),
+	'description' => '!',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('wibiya_settings'),
+    'access arguments' => array('Manage Wibiya settings'),
+  );
+  $items['admin/settings/wibiya/settings'] = array(
+    'title' => t('Configure settings'),
+	'description' => '!',
+    'weight' => 0,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  return $items;
+}
+
+/**
+ * Valid permissions
+ * Implementating hook_perm()
+ * @return array An array of valid permissions
+ */
+function wibiya_perm() {
+  return array('Manage Wibiya settings');
+}
+
+/**
+ * Settings form
+ * Implementing system_settings_form()
+ * @return form array
+ */
+function wibiya_settings() {
+  $form['wibiya_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Wibiya Toolbar On/Off'),
+    '#default_value' => variable_get('wibiya_enabled',1),
+    '#description' => t('Enable or disable the Wibiya Toolbar'),
+  );
+  $form['wibiya_toolbarpath'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Wibiya Toolbar Path'),
+    '#default_value' => variable_get('wibiya_toolbarpath',''),
+    '#size' => 10,
+    '#description' => t("Toolbar ID as you got it from Wibiya's Dashboard"),
+	'#required' => TRUE,
+  );
+  
+  return system_settings_form($form);
+}
+
+/**
+ * Wibiya code adding!
+ * The toolbar ID joins the JS file for a perfect toolbar harmony :)
+ * @return toolbar JS script
+ */
+function wibiya_footer() {
+	if(variable_get('wibiya_enabled',1) && !drupal_match_path(drupal_get_path_alias($_GET['q']), 'admin/*'))
+	{
+	  if ($wibiya_toolbarpath = variable_get('wibiya_toolbarpath','')) {
+			return '<script src="'.$wibiya_toolbarpath.'" type="text/javascript"></script><noscript><a href="http://www.wibiya.com/">Web Toolbar by Wibiya</a></noscript>';
+		}
+		else {
+			drupal_set_message(t('Please set your toolbar Path in <a href="?q=/admin/settings/wibiya">Wibiya Settings</a> page.'));
+		}
+	}
+}

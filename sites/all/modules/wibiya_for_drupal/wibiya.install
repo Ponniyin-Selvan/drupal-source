@@ -1,0 +1,13 @@
+<?php
+// $Id: wibiya.install
+
+function wibiya_install() {
+  drupal_set_message(t('The Wibiya Toolbar was installed!'));
+}
+
+function wibiya_uninstall() {
+  drupal_set_message(t('The Wibiya Toolbar was uninstalled.'));
+  
+  db_query("DELETE FROM {variable} WHERE name LIKE 'wibiya_%'");
+  cache_clear_all('variables', 'cache');
+}

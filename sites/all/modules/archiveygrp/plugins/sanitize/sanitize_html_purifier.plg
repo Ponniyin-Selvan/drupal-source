@@ -1,0 +1,40 @@
+<?php
+require_once 'htmlpurifier-3.3.0/library/HTMLPurifier.auto.php';
+
+class SanitizeHtmlPurifier extends BasePlugin {
+	var $logger;
+	var $config;
+	var $purifier;
+   
+    function SanitizeHtmlPurifier(){
+        $this->logger =& LoggerManager::getLogger('SanitizeHtmlPurifier');
+		$this->config = HTMLPurifier_Config::createDefault();
+		$this->config->set('Core', 'Encoding', 'UTF-8');
+		$this->config->set('HTML', 'AllowedElements', 'a, abbr, acronym, address, b, bdo, big, blockquote, br, caption, center, cite, code, dd, del, dfn, dir, div, dl, dt, em,h1, h2, h3, h4, h5, h6, hr, i, ins, li, ol, p, pre, q, s, small, span, strike, strong, sub, sup, tt, u, ul, var');
+		$this->config->set('AutoFormat', 'AutoParagraph', false);
+		$this->config->set('AutoFormat', 'Linkify', true);
+		$this->config->set('HTML', 'TidyLevel', 'heavy'); 
+		$this->config->set('HTML', 'ForbiddenAttributes', '*@style, *@class');
+		$this->purifier = new HTMLPurifier($this->config);
+    }
+
+	public function handleMessage(&$messageDetails) {
+
+		if (isset($messageDetails['content-type'])) {
+		    if ($messageDetails['content-type'] == "text/html") {
+				if (isset($messageDetails['content'])) {
+					$htmlMessages = $messageDetails['content'];
+					foreach($htmlMessages as $id => $htmlMessage) {
+					   $htmlMessages[$id] = $this->purifier->purify($htmlMessage);
+					}
+					$messageDetails['content'] = $htmlMessages;
+				} else {
+					$this->logger->error("Message doesn't have html content");
+				}
+			}
+		} else {
+			$this->logger->error("Couldn't find content type");
+		}
+	}
+}
+?>

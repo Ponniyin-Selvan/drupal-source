@@ -1,0 +1,87 @@
+<?php
+/* ex: set syntax=php tabstop=4 expandtab shiftwidth=4 softtabstop=4: */
+/*
+Acidfree Photo Albums for Drupal
+Copyright (C) 2005, 2006, 2007, 2008 Vernon Mauery
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+*/
+
+// acidfree.install
+
+function acidfree_uninstall() {
+    db_query('DROP TABLE {acidfree_album}');
+    db_query("DELETE FROM {variable} WHERE name LIKE '%%s%'", 'acidfree');
+    taxonomy_del_vocabulary(variable_get('acidfree_vocab_id', 0));
+    db_query("DELETE FROM {blocks} WHERE module = '%s'", 'acidfree');
+}
+
+function acidfree_schema() {
+    $schema['acidfree_album'] = array(
+        'fields' => array(
+            'aid' => array(
+                'type' => 'int',
+                'not null' => True,
+                'unsigned' => True,
+                'default' => 0,
+            ),
+            'tid' => array(
+                'type' => 'int',
+                'not null' => True,
+                'unsigned' => True,
+                'default' => 0,
+            ),
+            'thumb' => array(
+                'type' => 'varchar',
+                'not null' => True,
+                'default' => '',
+                'length' => 128,
+            ),
+            'share' => array(
+                'type' => 'int',
+                'not null' => True,
+                'unsigned' => True,
+                'default' => 0,
+            ),
+            'order_by' => array(
+                'type' => 'varchar',
+                'not null' => True,
+                'default' => '<default>',
+                'length' => 32,
+            ),
+            'view' => array(
+                'type' => 'varchar',
+                'not null' => True,
+                'default' => 'grid',
+                'length' => 32,
+            ),
+        ),
+        'primary key' => array('aid'),
+    );
+    return $schema;
+}
+
+function acidfree_install() {
+    drupal_install_schema('acidfree');
+    variable_set('node_options_acidfree', array('status', 'sticky'));
+    db_query("UPDATE {system} SET weight=%d WHERE name='%s'", 99, 'acidfree');
+}
+
+function acidfree_update_6001() {
+    $ret = array();
+
+    return $ret;
+}
+?>

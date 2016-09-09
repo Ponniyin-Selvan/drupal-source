@@ -1,0 +1,24 @@
+<?php
+
+class Nl2Br extends BasePlugin {
+	var $logger;
+	var $acronyms;
+
+    function Nl2Br(){
+        $this->logger =& LoggerManager::getLogger('Nl2Br');
+	}
+	
+	public function handleMessage(&$messageDetails) {
+		if (isset($messageDetails['content'])) {
+			$messages = $messageDetails['content'];
+			foreach($messages as $id => $message) {
+				$message = str_replace("\n", "<br />", $message);
+				$messages[$id] = str_replace("\r", "", $message);
+			}
+			$messageDetails['content'] = $messages;
+		} else {
+			$this->logger->error("Message doesn't have html content");
+		}
+	}
+ }
+

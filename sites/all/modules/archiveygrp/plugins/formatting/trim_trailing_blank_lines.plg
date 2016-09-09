@@ -1,0 +1,55 @@
+<?php
+
+class TrimTrailingBlankLines extends BasePlugin {
+	var $logger;
+
+    function TrimTrailingBlankLines(){
+        $this->logger =& LoggerManager::getLogger('TrimTrailingBlankLines');
+	}
+	
+	function trimBlankLines($message) {
+	
+		$lines = preg_split("/\\n/", $message, -1, PREG_SPLIT_DELIM_CAPTURE);
+		$isStarted = false;
+		$this->logger->debug(print_r($lines, true));
+		for ($i = 0 ; $i < count($lines) ; $i++) {
+			 if (!$isStarted && trim($lines[$i]) == "") {
+				$lines[$i] = "<delete-line>";
+			 } else {
+				$isStarted = true;
+			 }
+		}
+		$this->logger->debug(print_r($lines, true));
+		$isStarted = false;
+		for ($i = count($lines) ; $i >= 0 ; $i--) {
+			 if (!$isStarted && trim($lines[$i]) == "") {
+				$lines[$i] = "<delete-line>";
+			 } else {
+				$isStarted = true;
+			 }
+		}
+		$this->logger->debug(print_r($lines, true));
+		$formatted_text = "";
+		for ($i = 0 ; $i < count($lines) ; $i++) {
+			 if ($lines[$i] == "<delete-line>") {
+				continue;
+			 } else {
+				$formatted_text .= $lines[$i]."\n";
+			 }
+		}
+		 return "<p>".$formatted_text."</p>";
+	}
+	
+	public function handleMessage(&$messageDetails) {
+		if (isset($messageDetails['content'])) {
+			$messages = $messageDetails['content'];
+			foreach($messages as $id => $message) {
+				$messages[$id] = $this->trimBlankLines($message);
+			}
+			$messageDetails['content'] = $messages;
+		} else {
+			$this->logger->error("Message doesn't have html content");
+		}
+	}
+}
+

@@ -1,0 +1,11 @@
+name = Image Filter
+description = "Allows users to reference images from other nodes."
+core = 6.x
+version = "6.x-1.0-dev"
+
+; Information added by drupal.org packaging script on 2009-08-19
+version = "6.x-1.0"
+core = "6.x"
+project = "image_filter"
+datestamp = "1250656834"
+

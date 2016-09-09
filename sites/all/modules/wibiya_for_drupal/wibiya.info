@@ -1,0 +1,6 @@
+; $Id$
+name = Wibiya Toolbar
+description = Wibiya toolbar settings plugin
+package = Other
+version = VERSION
+core = 6.x
